@@ -31,8 +31,10 @@ public class StatManager {
 			return;
 		if(config.getBoolean("stats.database.enable")){
 			database = new MySQLDatabase(Main.getInstance());
-			if(database.setup())
+			if(database.setup()) {
+				registerStatsFromDatabase();
 				return;
+			}
 		}
 		for (String uuid : stats.getKeys(false)) {
 			OfflinePlayer player = Bukkit.getOfflinePlayer(UUID.fromString(uuid));
@@ -113,6 +115,19 @@ public class StatManager {
 			stats.set(stat.getPlayer().getUniqueId() + "." + stat.getType().toString().toLowerCase(), stat.getValue());
 		
 		SettingsManager.getInstance().save();
+	}
+
+	/**
+	 * Get all the stats from all the players online and put them in the StatManager system.
+	 */
+	private void registerStatsFromDatabase(){
+		for(Player player:Bukkit.getServer().getOnlinePlayers()){
+			for(StatType statType: StatType.values()) {
+				StatManager.getInstance().registerStat(player, statType,StatManager.getInstance().getMySQLDatabase().getStat(player.getUniqueId().toString(),statType.toString().toLowerCase()));
+			}
+		}
+
+
 	}
 
 	public void saveToDatabase(){
